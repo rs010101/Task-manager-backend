@@ -2,6 +2,7 @@
   "name": "task-manager",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "reset-project": "node ./scripts/reset-project.js",
