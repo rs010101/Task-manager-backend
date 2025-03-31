@@ -13,10 +13,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Ensure request body is parsed
 
 // MongoDB connection
-const DATABASE_URL = process.env.DATABASE_URL; // Using DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.error('❌ Error: DATABASE_URL is not defined in .env');
@@ -31,13 +31,13 @@ mongoose.connect(DATABASE_URL)
   });
 
 // Routes
-app.use('/api/users', userRoutes); // User routes
-app.use('/api/tasks', taskRoutes); // Task routes
+app.use('/api/users', userRoutes);
+app.use('/api/tasks', taskRoutes); // Mounting the task routes at /api/tasks
 
 // Start the server
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
 
-// Export app for testing/deployment
+// Export app for testing
 export default app;

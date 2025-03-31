@@ -1,16 +1,31 @@
 import express from 'express';
 import Task from '../models/Task.js';
 import { verifyToken } from '../middlewares/validateToken.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// POST /tasks - Create a new task
-router.post('/tasks', verifyToken, async (req, res) => {
+// Middleware to validate ObjectId
+const validateObjectId = (req, res, next) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid task ID format' });
+  }
+  next();
+};
+
+// POST /api/tasks - Create a new task
+router.post('/', verifyToken, async (req, res) => {
   const { title, description } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ message: 'Title and description are required' });
+  }
+
   const newTask = new Task({
     title,
     description,
-    userId: req.user.id, // Get user ID from the token
+    userId: req.user.id, // Extracted from token
   });
 
   try {
@@ -21,8 +36,8 @@ router.post('/tasks', verifyToken, async (req, res) => {
   }
 });
 
-// GET /tasks - Get all tasks for the logged-in user
-router.get('/tasks', verifyToken, async (req, res) => {
+// GET /api/tasks - Get all tasks for the logged-in user
+router.get('/', verifyToken, async (req, res) => {
   try {
     const tasks = await Task.find({ userId: req.user.id });
     res.status(200).json(tasks);
@@ -31,8 +46,8 @@ router.get('/tasks', verifyToken, async (req, res) => {
   }
 });
 
-// GET /tasks/:id - Get a specific task by ID
-router.get('/tasks/:id', verifyToken, async (req, res) => {
+// GET /api/tasks/:id - Get a specific task by ID
+router.get('/:id', verifyToken, validateObjectId, async (req, res) => {
   const taskId = req.params.id;
 
   try {
@@ -46,16 +61,20 @@ router.get('/tasks/:id', verifyToken, async (req, res) => {
   }
 });
 
-// PUT /tasks/:id - Update a task by ID
-router.put('/tasks/:id', verifyToken, async (req, res) => {
+// PUT /api/tasks/:id - Update a task by ID
+router.put('/:id', verifyToken, validateObjectId, async (req, res) => {
   const taskId = req.params.id;
   const { title, description } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ message: 'Title and description are required' });
+  }
 
   try {
     const updatedTask = await Task.findOneAndUpdate(
       { _id: taskId, userId: req.user.id },
       { title, description },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedTask) {
@@ -67,8 +86,8 @@ router.put('/tasks/:id', verifyToken, async (req, res) => {
   }
 });
 
-// DELETE /tasks/:id - Delete a task by ID
-router.delete('/tasks/:id', verifyToken, async (req, res) => {
+// DELETE /api/tasks/:id - Delete a task by ID
+router.delete('/:id', verifyToken, validateObjectId, async (req, res) => {
   const taskId = req.params.id;
 
   try {
